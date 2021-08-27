@@ -2,6 +2,7 @@
 # Copyright (c) 2019 by Delphix. All rights reserved.
 #
 
+import base64
 import errno
 import json
 import logging
@@ -36,25 +37,23 @@ def upload(engine, user, upload_artifact, password, wait):
                  ' wait: {}'.format(engine, user, upload_artifact, wait))
     logger.info('Uploading plugin artifact {} ...'.format(upload_artifact))
 
-    # Read content of upload artifact
     try:
         with open(upload_artifact, 'rb') as f:
-            try:
-                content = json.load(f)
-            except ValueError:
-                raise exceptions.UserError(
-                    'Upload failed because the upload artifact was not a valid'
-                    ' json file. Verify the file was built using the delphix'
-                    ' build command.')
+                filecontent = f.read()
+        encoded = base64.b64encode(filecontent)
+        python_dict_obj = {'farfile': encoded}
+        content = json.dumps(python_dict_obj)
     except IOError as err:
         raise exceptions.UserError(
-            'Unable to read upload artifact file \'{}\''
+            'Unable to read upload far file \'{}\''
             '\nError code: {}. Error message: {}'.format(
                 upload_artifact, err.errno,
                 errno.errorcode.get(err.errno, UNKNOWN_ERR)))
 
     # Create a new delphix session.
     client = delphix_client.DelphixClient(engine)
-    engine_api = client.get_engine_api(content)
+    # the version is included in vsdk plugins, hardcode it in for far files
+    engine_api = {'micro': 6, 'major': 1, 'type': 'APIVersion', 'minor': 11}
     client.login(engine_api, user, password)
-    client.upload_plugin(os.path.basename(upload_artifact), content, wait)
+    #client.upload_far(os.path.basename(upload_artifact), content, wait)
+    client.upload_far(os.path.basename(upload_artifact), content, wait)

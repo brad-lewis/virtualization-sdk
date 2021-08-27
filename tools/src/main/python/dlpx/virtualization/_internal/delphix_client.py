@@ -236,6 +236,28 @@ class DelphixClient(object):
                                               upload_response.get('action'),
                                               upload_response.get('job'))
 
+    def upload_far(self, name, content, wait):
+        """
+        Takes in the far name and content (as a json). Attempts to upload
+        the plugin onto the connected Delphix Engine. Can raise HttpPostError
+        and UnexpectedError.
+        """
+        # Get the upload token.
+        response = self.__post('delphix/service/insight/addPlugin/requestUploadToken')
+        token = response['result']['token']
+        logger.debug('Got token {!r} successfully.'.format(token))
+
+        logger.info('Uploading plugin {!r}.'.format(name))
+        # Encode plugin content.
+        upload_response = self.__post('delphix/data/upload',
+                                      content_type=self.__UPLOAD_CONTENT,
+                                      data=self.__encode(
+                                          json.dumps(content), token, name))
+        if wait:
+            self._wait_for_upload_to_complete(name,
+                                              upload_response.get('action'),
+                                              upload_response.get('job'))
+
     def _wait_for_upload_to_complete(self, name, upload_action, upgrade_job):
         """
         Waits a maximum of 60 minutes for the plugin upload to complete before

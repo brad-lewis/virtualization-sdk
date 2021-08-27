@@ -1,0 +1,15 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+import re
+import sys
+
+sys.path.insert(0, '/Users/blewis/ws/virtualization-sdk/tools/src/main/python');
+
+from dlpx.virtualization._internal.cli import delphix_sdk
+if __name__ == '__main__':
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    sys.exit(delphix_sdk())
+
+#from dlpx.virtualization._internal.commands import upload as upload_internal                                                                              
+#
+#upload_internal.upload("brad-gi2.dlpxdc.co", "sysadmin", "/Users/blewis/ws/far-dev/splunk_conditional.far", "sysadmin", True)
